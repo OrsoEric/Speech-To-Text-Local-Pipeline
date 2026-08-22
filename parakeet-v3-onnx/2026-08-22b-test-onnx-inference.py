@@ -19,14 +19,20 @@ C_S_ONNX_EXECUTION_PROVIDERS = [ "WebGpuExecutionProvider"]
 # it goes a lot slower if I give it both
 #C_S_ONNX_EXECUTION_PROVIDERS = [ "WebGpuExecutionProvider", "CPUExecutionProvider" ]
 
+# enable profiling
+# it has limitation that it measures compute, and not memory moving operations
+#it generates lots of json detailing everything
+C_X_PROFILING = False
+
+
 def load_model(i_s_model_path: Path):
     start_ns = perf_counter_ns()
 
     cl_session_options = lib_onnx_runtime.SessionOptions()
-    cl_session_options.enable_profiling = True
+    cl_session_options.enable_profiling = C_X_PROFILING
 
-    #increase verbosirty
-    #lib_onnx_runtime.set_default_logger_severity(1)
+    #lower the verbosity from default
+    lib_onnx_runtime.set_default_logger_severity(3)
     
     cl_model = onnx_asr.load_model(
         "nemo-parakeet-tdt-0.6b-v3",
@@ -34,8 +40,6 @@ def load_model(i_s_model_path: Path):
         providers=C_S_ONNX_EXECUTION_PROVIDERS,
         sess_options=cl_session_options,
     )
-    #restore verbosity
-    #lib_onnx_runtime.set_default_logger_severity(2)
 
     find_sessions(cl_model)
 
@@ -188,7 +192,8 @@ def main():
 
     print(f"Inference time: {inference_time_ms :.0f} ms")
 
-    inspect_profiles(cl_model)
+    if C_X_PROFILING:
+        inspect_profiles(cl_model)
 
     print("TRANSCRIPT: ",s_transcript)
 

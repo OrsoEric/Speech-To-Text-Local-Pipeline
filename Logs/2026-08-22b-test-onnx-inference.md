@@ -102,7 +102,11 @@ You have confirmed that all three ONNX Runtime sessions used by onnx_asr have We
 
 ---
 
-# DEBUG WebGPU
+# DEBUG
+
+### WebGPU
+
+
 
 ok, this is cool that I get a diagnostics
 
@@ -134,3 +138,162 @@ model.asr._decoder_joint
   Execution by provider:
     WebGpuExecutionProvider           165.17 ms   (2522 events)
     CPUExecutionProvider                1.37 ms   (97 events)
+
+
+### [ "WebGpuExecutionProvider", "CPUExecutionProvider" ]
+
+['WebGpuExecutionProvider', 'CPUExecutionProvider']
+Model load time: 3064 ms
+Inference time: 3405 ms
+
+=== NODE EXECUTION INSPECTION ===
+
+model.asr._preprocessor._preprocessor
+  Profile: 'onnxruntime_profile__2026-08-22_12-36-32_845.json'
+  Events: 88
+
+  Execution by provider:
+    WebGpuExecutionProvider           315.64 ms   (38 events)
+    CPUExecutionProvider                0.81 ms   (12 events)
+
+model.asr._encoder
+  Profile: 'onnxruntime_profile__2026-08-22_12-36-32_940.json'
+  Events: 3311
+
+  Execution by provider:
+    WebGpuExecutionProvider           619.04 ms   (1511 events)
+    CPUExecutionProvider                9.13 ms   (496 events)
+
+model.asr._decoder_joint
+  Profile: 'onnxruntime_profile__2026-08-22_12-36-35_713.json'
+  Events: 5531
+
+  Execution by provider:
+    WebGpuExecutionProvider           208.32 ms   (2522 events)
+    CPUExecutionProvider                1.61 ms   (97 events)
+
+
+# analizing the json generated
+
+==================================================================
+TOP 100 LONGEST EVENTS
+================================================================================
+  1.      325.989 ms  model_run
+     category: Session
+     args: {}
+
+  2.      300.592 ms  model_run
+     category: Session
+     args: {}
+
+  3.      266.123 ms  model_run
+     category: Session
+     args: {}
+
+  4.      238.028 ms  model_run
+     category: Session
+     args: {}
+
+  5.      229.341 ms  model_run
+     category: Session
+     args: {}
+
+  6.      220.742 ms  model_run
+     category: Session
+     args: {}
+
+  7.      162.450 ms  model_run
+     category: Session
+     args: {}
+
+  8.      123.460 ms  model_run
+     category: Session
+     args: {}
+
+  9.      122.244 ms  SequentialExecutor::Execute
+     category: Session
+     args: {}
+
+ 10.       34.243 ms  session_initialization
+     category: Session
+     args: {}
+
+ 11.       30.703 ms  /joint/pred/MatMul_kernel_time
+     category: Node
+     args: {'input_type_shape': [{'float': [1, 1, 640]}, {'float': [640, 640]}], 'op_name': 'MatMul', 'provider': 'WebGpuExecutionProvider', 'node_index': '17', 'activation_size': '2560', 'output_size': '2560', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}, 'output_type_shape': [{'float': [1, 1, 640]}], 'parameter_size': '1638400'}
+
+ 12.       24.692 ms  /decoder/dec_rnn/lstm/LSTM_kernel_time
+     category: Node
+     args: {'output_size': '7680', 'parameter_size': '13127680', 'op_name': 'LSTM', 'activation_size': '7680', 'provider': 'WebGpuExecutionProvider', 'node_index': '5', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}, 'output_type_shape': [{'float': [1, 1, 1, 640]}, {'float': [1, 1, 640]}, {'float': [1, 1, 640]}], 'input_type_shape': [{'float': [1, 1, 640]}, {'float': [1, 2560, 640]}, {'float': [1, 2560, 640]}, {'float': [1, 5120]}, {'float': [1, 1, 640]}, {'float': [1, 1, 640]}]}
+
+ 13.       24.442 ms  /joint/joint_net/joint_net.2/MatMul_kernel_time
+     category: Node
+     args: {'output_type_shape': [{'float': [1, 1, 1, 8198]}], 'provider': 'WebGpuExecutionProvider', 'parameter_size': '20986880', 'output_size': '32792', 'node_index': '23', 'input_type_shape': [{'float': [1, 1, 1, 640]}, {'float': [640, 8198]}], 'activation_size': '2560', 'op_name': 'MatMul', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}}
+
+ 14.       23.749 ms  model_run
+     category: Session
+     args: {}
+
+ 15.       22.556 ms  model_run
+     category: Session
+     args: {}
+
+
+
+================================================================================
+TOP 100 LONGEST EVENTS
+================================================================================
+  1.      325.989 ms  model_run
+     category: Session
+     args: {}
+
+  2.      300.592 ms  model_run
+     category: Session
+     args: {}
+
+  3.      266.123 ms  model_run
+     category: Session
+     args: {}
+
+  4.      238.028 ms  model_run
+     category: Session
+     args: {}
+
+  5.      229.341 ms  model_run
+     category: Session
+     args: {}
+
+  6.      220.742 ms  model_run
+     category: Session
+     args: {}
+
+  7.      162.450 ms  model_run
+     category: Session
+     args: {}
+
+  8.      123.460 ms  model_run
+     category: Session
+     args: {}
+
+  9.      122.244 ms  SequentialExecutor::Execute
+     category: Session
+     args: {}
+
+ 10.       34.243 ms  session_initialization
+     category: Session
+     args: {}
+
+ 11.       30.703 ms  /joint/pred/MatMul_kernel_time
+     category: Node
+     args: {'input_type_shape': [{'float': [1, 1, 640]}, {'float': [640, 640]}], 'op_name': 'MatMul', 'provider': 'WebGpuExecutionProvider', 'node_index': '17', 'activation_size': '2560', 'output_size': '2560', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}, 'output_type_shape': [{'float': [1, 1, 640]}], 'parameter_size': '1638400'}
+
+ 12.       24.692 ms  /decoder/dec_rnn/lstm/LSTM_kernel_time
+     category: Node
+     args: {'output_size': '7680', 'parameter_size': '13127680', 'op_name': 'LSTM', 'activation_size': '7680', 'provider': 'WebGpuExecutionProvider', 'node_index': '5', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}, 'output_type_shape': [{'float': [1, 1, 1, 640]}, {'float': [1, 1, 640]}, {'float': [1, 1, 640]}], 'input_type_shape': [{'float': [1, 1, 640]}, {'float': [1, 2560, 640]}, {'float': [1, 2560, 640]}, {'float': [1, 5120]}, {'float': [1, 1, 640]}, {'float': [1, 1, 640]}]}
+
+ 13.       24.442 ms  /joint/joint_net/joint_net.2/MatMul_kernel_time
+     category: Node
+     args: {'output_type_shape': [{'float': [1, 1, 1, 8198]}], 'provider': 'WebGpuExecutionProvider', 'parameter_size': '20986880', 'output_size': '32792', 'node_index': '23', 'input_type_shape': [{'float': [1, 1, 1, 640]}, {'float': [640, 8198]}], 'activation_size': '2560', 'op_name': 'MatMul', 'thread_scheduling_stats': {'main_thread': {'thread_pool_name': 'session-3-intra-op', 'thread_id': '7420', 'block_size': [], 'core': 0, 'Distribution': 0, 'DistributionEnqueue': 0, 'Run': 0, 'Wait': 0, 'WaitRevoke': 0}, 'sub_threads': {'15608': {'num_run': 0, 'core': -1}, '7876': {'num_run': 0, 'core': -1}, '16020': {'num_run': 0, 'core': -1}, '11772': {'num_run': 0, 'core': -1}, '7348': {'num_run': 0, 'core': -1}, '8144': {'num_run': 0, 'core': -1}, '15672': {'num_run': 0, 'core': -1}, '5464': {'num_run': 0, 'core': -1}, '15912': {'num_run': 0, 'core': -1}, '5132': {'num_run': 0, 'core': -1}, '14228': {'num_run': 0, 'core': -1}, '12928': {'num_run': 0, 'core': -1}, '17528': {'num_run': 0, 'core': -1}, '17888': {'num_run': 0, 'core': -1}, '17500': {'num_run': 0, 'core': -1}}}}
+
+ 14.       23.749 ms  model_run
+     category: Session
