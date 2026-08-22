@@ -1,6 +1,6 @@
 uv venv .venv --python 3.13
 
-.venv\Scripts\activate
+call .venv\Scripts\activate.bat
 
 uv pip install onnx-asr
 uv pip install onnxruntime
