@@ -2,6 +2,50 @@
 
 Develop a local speech to text pipeline
 
+# ONNX
+
+## onnxruntime 
+
+```cmd
+uv pip install onnxruntime
+```
+['AzureExecutionProvider', 'CPUExecutionProvider']
+Model load time: 2869 ms
+Inference time: 3364 ms
+
+## onnxruntime-rocm
+
+```cmd
+(.venv) F:\Data\Project\Project-LLM\STT_Models\Speech-To-Text-Local-Pipeline>uv pip install onnxruntime-rocm  
+  × No solution found when resolving dependencies:
+  ╰─▶ Because onnxruntime-rocm==1.22.1 has no wheels with a
+      matching Python ABI tag (e.g., `cp313`) and only the
+      following versions of onnxruntime-rocm are available:
+          onnxruntime-rocm==1.22.1
+          onnxruntime-rocm>=1.22.2.post1
+      we can conclude that onnxruntime-rocm<1.22.2.post1
+      cannot be used.
+      And because onnxruntime-rocm>=1.22.2.post1 has no
+      wheels with a matching platform tag (e.g., `win_amd64`)
+      and you require onnxruntime-rocm, we can conclude that
+      your requirements are unsatisfiable.
+
+hint: You require CPython 3.13 (`cp313`), but we only found wheels for `onnxruntime-rocm` (v1.22.1) with the following Python ABI tag: `cp310`
+hint: Wheels are available for `onnxruntime-rocm` (v1.22.2.post3) on the following platform: `manylinux_2_34_x86_64`
+```
+
+## onnxruntime-webgpu
+
+```cmd
+(.venv) F:\Data\Project\Project-LLM\STT_Models\Speech-To-Text-Local-Pipeline>uv pip install onnxruntime-webgpu
+Resolved 5 packages in 365ms
+Prepared 1 package in 3.69s
+░░░░░░░░░░░░░░░░░░░░ [0/1] Installing wheels...                warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 169ms
+ + onnxruntime-webgpu==1.27.0
+```
 
 # Parakeet V3
 
