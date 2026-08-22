@@ -22,13 +22,20 @@ C_S_ONNX_EXECUTION_PROVIDERS = [ "WebGpuExecutionProvider"]
 def load_model(i_s_model_path: Path):
     start_ns = perf_counter_ns()
 
-    #lib_onnx_runtime.set_default_logger_severity(0)
+    cl_session_options = lib_onnx_runtime.SessionOptions()
+    cl_session_options.enable_profiling = True
 
+    #increase verbosirty
+    #lib_onnx_runtime.set_default_logger_severity(1)
+    
     cl_model = onnx_asr.load_model(
         "nemo-parakeet-tdt-0.6b-v3",
         i_s_model_path,
         providers=C_S_ONNX_EXECUTION_PROVIDERS,
+        sess_options=cl_session_options,
     )
+    #restore verbosity
+    #lib_onnx_runtime.set_default_logger_severity(2)
 
     find_sessions(cl_model)
 
@@ -62,46 +69,55 @@ def find_sessions(obj, path="model"):
 
     return sessions
 
-def collect_profiles(i_cl_model):
-    print("\n=== Profiling ===")
 
-    profiles = []
+def inspect_profiles(i_cl_model):
+    print()
+    print("=== NODE EXECUTION INSPECTION ===")
 
     for name, session in find_sessions(i_cl_model):
+
         profile_path = session.end_profiling()
 
-        print(f"{name}")
-        print(f"  profile: {profile_path!r}")
+        print()
+        print(name)
+        print(f"  Profile: {profile_path!r}")
 
         if not profile_path:
-            print("  WARNING: ONNX Runtime did not return a profile path.")
+            print("  No profile was generated.")
             continue
 
         profile_path = Path(profile_path)
 
         if not profile_path.is_file():
-            print(f"  WARNING: profile does not exist: {profile_path}")
+            print("  Profile file does not exist.")
             continue
 
-        profiles.append((name, profile_path))
+        with profile_path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            events = json.load(file)
 
-    return profiles
+        inspect_profile_events(
+            name,
+            events,
+        )
 
-def analyze_profile(i_s_name: str, i_s_profile_path: Path):
-    with i_s_profile_path.open("r", encoding="utf-8") as f:
-        events = json.load(f)
 
-    print(f"\n=== {i_s_name} ===")
+def inspect_profile_events(i_s_session_name, i_events):
+    """
+    Print the execution-provider information contained
+    in ONNX Runtime profiling events.
+    """
 
-    execution_times = {}
+    provider_time_us = {}
+    provider_event_count = {}
 
-    for event in events:
+    print("  Events:", len(i_events))
+
+    for event in i_events:
+
         if event.get("ph") != "X":
-            continue
-
-        duration_us = event.get("dur", 0)
-
-        if duration_us <= 0:
             continue
 
         args = event.get("args", {})
@@ -112,21 +128,54 @@ def analyze_profile(i_s_name: str, i_s_profile_path: Path):
             or args.get("ep")
         )
 
-        if provider is None:
+        if not provider:
             continue
 
-        execution_times[provider] = (
-            execution_times.get(provider, 0) + duration_us
+        duration_us = event.get("dur", 0)
+
+        provider_time_us[provider] = (
+            provider_time_us.get(provider, 0)
+            + duration_us
         )
 
+        provider_event_count[provider] = (
+            provider_event_count.get(provider, 0)
+            + 1
+        )
+
+    if not provider_time_us:
+        print("  No provider information found in profile events.")
+
+        # Print a representative event so we can inspect the
+        # schema used by this particular ONNX Runtime build.
+        for event in i_events:
+            if event.get("ph") == "X":
+                print()
+                print("  Example profiling event:")
+                print(
+                    json.dumps(
+                        event,
+                        indent=2,
+                    )
+                )
+                break
+
+        return
+
+    print()
+    print("  Execution by provider:")
+
     for provider, duration_us in sorted(
-        execution_times.items(),
-        key=lambda x: x[1],
+        provider_time_us.items(),
+        key=lambda item: item[1],
         reverse=True,
     ):
+        count = provider_event_count[provider]
+
         print(
-            f"  {provider:<30} "
+            f"    {provider:<30}"
             f"{duration_us / 1000:>10.2f} ms"
+            f"   ({count} events)"
         )
 
 
@@ -139,10 +188,7 @@ def main():
 
     print(f"Inference time: {inference_time_ms :.0f} ms")
 
-    profiles = collect_profiles(cl_model)
-
-    for name, profile_path in profiles:
-        analyze_profile(name, profile_path)
+    inspect_profiles(cl_model)
 
     print("TRANSCRIPT: ",s_transcript)
 

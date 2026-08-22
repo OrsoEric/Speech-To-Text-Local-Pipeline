@@ -100,3 +100,37 @@ TRANSCRIPT:  I was entrusted this for thee by Torrent's former master.'Tis a bel
 You have confirmed that all three ONNX Runtime sessions used by onnx_asr have WebGPU registered:
 
 
+---
+
+# DEBUG WebGPU
+
+ok, this is cool that I get a diagnostics
+
+Model load time: 5598 ms
+Inference time: 1293 ms
+
+=== NODE EXECUTION INSPECTION ===
+
+model.asr._preprocessor._preprocessor
+  Profile: 'onnxruntime_profile__2026-08-22_12-34-06_118.json'
+  Events: 88
+
+  Execution by provider:
+    WebGpuExecutionProvider           255.54 ms   (38 events)
+    CPUExecutionProvider                0.64 ms   (12 events)
+
+model.asr._encoder
+  Profile: 'onnxruntime_profile__2026-08-22_12-34-06_236.json'
+  Events: 3311
+
+  Execution by provider:
+    WebGpuExecutionProvider           524.79 ms   (1511 events)
+    CPUExecutionProvider                8.65 ms   (496 events)
+
+model.asr._decoder_joint
+  Profile: 'onnxruntime_profile__2026-08-22_12-34-08_957.json'
+  Events: 5531
+
+  Execution by provider:
+    WebGpuExecutionProvider           165.17 ms   (2522 events)
+    CPUExecutionProvider                1.37 ms   (97 events)
