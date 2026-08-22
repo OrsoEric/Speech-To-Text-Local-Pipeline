@@ -38,6 +38,12 @@ F:\Data\Project\Project-LLM\STT_Models\Speech-To-Text-Local-Pipeline\parakeet-v3
 I was entrusted this for thee by Torrent's former master.'Tis a bell for calling forth spirits. Summon them with it. From ash and return to the earth tree. The spirits will obey thine command but briefly. As they recall battles past,
 ```
 
+# TEST B
+
+```cmd
+python parakeet-v3-onnx/2026-08-22b-test-onnx-inference.py
+```
+
 # EOL
 
 <details>

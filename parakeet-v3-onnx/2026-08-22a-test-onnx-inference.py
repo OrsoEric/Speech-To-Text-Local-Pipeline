@@ -1,7 +1,11 @@
 #
-import onnx_asr
-from pathlib import Path
 
+from pathlib import Path
+import onnx_asr
+import onnxruntime as ort
+
+print("ONNX Runtime:", ort.__version__)
+print("Available:", ort.get_available_providers())
 
 cl_model = onnx_asr.load_model(
     "nemo-parakeet-tdt-0.6b-v3",
