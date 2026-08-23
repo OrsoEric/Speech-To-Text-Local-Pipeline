@@ -1,15 +1,12 @@
 from time import perf_counter_ns
 from pathlib import Path
-import json
 
 import numpy as np
 import onnxruntime as lib_onnx_runtime
 import onnx_asr
 from onnx_asr.adapters import TextResultsAsrAdapter
 
-
 C_S_MODEL_NAME = "nemo-parakeet-tdt-0.6b-v3"
-
 
 class Cl_asr_parakeet_v3:
 
@@ -83,122 +80,30 @@ class Cl_asr_parakeet_v3:
 
         return s_transcription, self.n_last_inference_time_ms
 
-    def find_sessions(self, obj, path="model"):
-        sessions = []
+    def inspect_provider_details(self, i_cl_model=None, i_s_path="model"):
+        if i_cl_model is None:
+            i_cl_model = self.cl_model
 
-        if isinstance(obj, lib_onnx_runtime.InferenceSession):
-            sessions.append((path, obj))
-            return sessions
+        if i_cl_model is None:
+            raise RuntimeError("Model not loaded, call load_model() first")
 
-        if hasattr(obj, "__dict__"):
-            for name, value in vars(obj).items():
-                if isinstance(value, lib_onnx_runtime.InferenceSession):
-                    sessions.append((f"{path}.{name}", value))
-                elif hasattr(value, "__dict__"):
-                    sessions.extend(self.find_sessions(value, f"{path}.{name}"))
-
-        return sessions
-
-    def inspect_profiles(self):
-        if not self.b_onnx_profiling:
-            print("ONNX profiling was not enabled, pass i_x_profiling=True to load_model()")
-            return
-
-        print()
-        print("=== NODE EXECUTION INSPECTION ===")
-
-        for name, session in self.find_sessions(self.cl_model):
-
-            profile_path = session.end_profiling()
-
+        if isinstance(i_cl_model, lib_onnx_runtime.InferenceSession):
+            print(i_s_path)
+            print(f"  providers: {i_cl_model.get_providers()}")
             print()
-            print(name)
-            print(f"  Profile: {profile_path!r}")
-
-            if not profile_path:
-                print("  No profile was generated.")
-                continue
-
-            profile_path = Path(profile_path)
-
-            if not profile_path.is_file():
-                print("  Profile file does not exist.")
-                continue
-
-            with profile_path.open(
-                "r",
-                encoding="utf-8",
-            ) as file:
-                events = json.load(file)
-
-            self._inspect_profile_events(
-                name,
-                events,
-            )
-
-    def _inspect_profile_events(self, i_s_session_name, i_events):
-        provider_time_us = {}
-        provider_event_count = {}
-
-        print("  Events:", len(i_events))
-
-        for event in i_events:
-
-            if event.get("ph") != "X":
-                continue
-
-            args = event.get("args", {})
-
-            provider = (
-                args.get("provider")
-                or args.get("execution_provider")
-                or args.get("ep")
-            )
-
-            if not provider:
-                continue
-
-            duration_us = event.get("dur", 0)
-
-            provider_time_us[provider] = (
-                provider_time_us.get(provider, 0)
-                + duration_us
-            )
-
-            provider_event_count[provider] = (
-                provider_event_count.get(provider, 0)
-                + 1
-            )
-
-        if not provider_time_us:
-            print("  No provider information found in profile events.")
-
-            for event in i_events:
-                if event.get("ph") == "X":
-                    print()
-                    print("  Example profiling event:")
-                    print(
-                        json.dumps(
-                            event,
-                            indent=2,
-                        )
-                    )
-                    break
-
             return
 
-        print()
-        print("  Execution by provider:")
+        if not hasattr(i_cl_model, "__dict__"):
+            return
 
-        for provider, duration_us in sorted(
-            provider_time_us.items(),
-            key=lambda item: item[1],
-            reverse=True,
-        ):
-            count = provider_event_count[provider]
+        for s_name, x_value in vars(i_cl_model).items():
 
-            print(
-                f"    {provider:<30}"
-                f"{duration_us / 1000:>10.2f} ms"
-                f"   ({count} events)"
-            )
+            s_path = f"{i_s_path}.{s_name}"
+
+            if isinstance(x_value, lib_onnx_runtime.InferenceSession):
+                print(s_path)
+                print(f"  providers: {x_value.get_providers()}")
+                print()
+
+            elif hasattr(x_value, "__dict__"):
+                self.inspect_provider_details(x_value, s_path)
