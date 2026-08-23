@@ -148,3 +148,42 @@ Chunk: WAV: duration=0.010 s, sample_rate=16000 Hz, samples=160, avg=0.007534, r
 # fine tune
 
 change core sampling parameter 
+
+obj_microphone = Cl_microphone(
+    i_sample_rate_hz=24000,
+    i_chunk_length_ms=100,
+)
+
+
+(.venv) F:\Data\Project\Project-LLM\STT_Models\Speech-To-Text-Local-Pipeline>python demo_b_microphone.py
+0: Microsoft Sound Mapper - Input
+1: Microphone (Trust GXT234 YUNIX 
+2: Primary Sound Capture Driver
+3: Microphone (Trust GXT234 YUNIX Microphone)
+4: Microphone (Trust GXT234 YUNIX Microphone)
+5: Stereo Mix (Realtek HD Audio Stereo input)
+6: Line In (Realtek HD Audio Line input)
+7: Microphone (Realtek HD Audio Mic input)
+8: Microphone (Trust GXT234 YUNIX Microphone)
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.008315, rms=0.008858
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.008271, rms=0.009033
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.006879, rms=0.008395
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.008108, rms=0.008780
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007811, rms=0.008338
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007804, rms=0.008231
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007626, rms=0.008071
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007825, rms=0.008253
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007793, rms=0.008133
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.008006, rms=0.008445
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.031518, rms=0.503186
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=-0.010833, rms=0.033664
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.009594, rms=0.014188
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.023745, rms=0.428211
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=-0.004037, rms=0.039985
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007191, rms=0.013851
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.020751, rms=0.471256
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=-0.001183, rms=0.214103
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.006096, rms=0.010609
+Chunk: WAV: duration=0.100 s, sample_rate=24000 Hz, samples=2400, avg=0.007491, rms=0.008293
+
+it works, i tapped the microphone, and it shows on the rms
