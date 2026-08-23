@@ -22,3 +22,29 @@ TRANSCRIPT:  I was entrusted this for thee by Torrent's former master.'Tis a bel
 DEMO2: from file extract wav, then feed wav to model
 Raw inference time: 1132 ms
 TRANSCRIPT RAW:  I was entrusted this for thee by Torrent's former master.'Tis a bell for calling forth spirits. Summon them with it. From ash and return to the earth tree. The spirits will obey thine command but briefly. As they recall battles past,
+
+
+# Cl_audio
+
+
+(.venv) F:\Data\Project\Project-LLM\STT_Models\Speech-To-Text-Local-Pipeline>python demo_a_file_parakeet_v3.py 
+Available providers: ['WebGpuExecutionProvider', 'CPUExecutionProvider']
+Model load time: 2882 ms
+model.asr._preprocessor._preprocessor
+  providers: ['WebGpuExecutionProvider', 'CPUExecutionProvider']
+
+model.asr._encoder
+  providers: ['WebGpuExecutionProvider', 'CPUExecutionProvider']
+
+model.asr._decoder_joint
+  providers: ['WebGpuExecutionProvider', 'CPUExecutionProvider']
+
+DEMO2: open file as St_wav, then feed wav to model
+WAV: WAV: duration=18.048 s, sample_rate=24000 Hz, samples=433152, avg=-0.000010, rms=0.114066
+Raw inference time: 2919 ms
+TRANSCRIPT RAW:  I was entrusted this for thee by Torrent's former master.'Tis a bell for calling forth spirits. Summon them with it. From ash and return to the earth tree. The spirits will obey thine command but briefly. As they recall battles past,
+
+
+# Benchmark
+
+I should feed a number of different audio samples and compute the actual processing speeds as it warms up

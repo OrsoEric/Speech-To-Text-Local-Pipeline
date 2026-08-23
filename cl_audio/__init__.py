@@ -25,8 +25,9 @@ class St_wav:
     n_avg: float = field(init=False)
     n_rms: float = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.compute_stats()
+        return
 
     def compute_stats(self) -> None:
         """
@@ -47,6 +48,7 @@ class St_wav:
         self.n_rms = float(
             numpy.sqrt(numpy.mean(self.np_samples ** 2))
         )
+        return
 
     def __str__(self) -> str:
         return (
