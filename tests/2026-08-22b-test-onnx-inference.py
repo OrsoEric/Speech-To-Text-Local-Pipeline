@@ -1,10 +1,13 @@
 from time import perf_counter_ns
 from pathlib import Path
 
+
+
 import json
 
 import onnxruntime as lib_onnx_runtime
 import onnx_asr
+from onnx_asr.adapters import TextResultsAsrAdapter
 
 print(lib_onnx_runtime.get_available_providers())
 
@@ -34,7 +37,7 @@ def load_model(i_s_model_path: Path):
     #lower the verbosity from default
     lib_onnx_runtime.set_default_logger_severity(3)
     
-    cl_model = onnx_asr.load_model(
+    cl_model : TextResultsAsrAdapter = onnx_asr.load_model(
         "nemo-parakeet-tdt-0.6b-v3",
         i_s_model_path,
         providers=C_S_ONNX_EXECUTION_PROVIDERS,
@@ -48,7 +51,7 @@ def load_model(i_s_model_path: Path):
     return cl_model, n_elapsed_ms
 
 
-def inference(i_cl_model, i_s_audio_path: Path):
+def inference(i_cl_model : TextResultsAsrAdapter, i_s_audio_path: Path):
     start_ns = perf_counter_ns()
 
     s_transcription = i_cl_model.recognize(i_s_audio_path)
