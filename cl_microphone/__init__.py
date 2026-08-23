@@ -1,27 +1,73 @@
 import sounddevice as sd
 import numpy
-from typing import List, Tuple, Any
+from typing import List, Any
 import queue
+
+from cl_audio import St_wav
+
+import sounddevice as sd
+import numpy
+from typing import List, Any
+import queue
+
+from cl_audio import St_wav
 
 
 class Cl_microphone:
     """
-    A lightweight microphone wrapper that enumerates available input devices,
-    captures audio in real‑time and enqueues the raw samples for downstream
-    consumers.  The implementation is deliberately minimal – it does **not**
-    perform voice activity detection or any advanced signal processing.
+    Lightweight microphone wrapper that enumerates available input devices,
+    captures audio in real-time and wraps every captured chunk into an
+    St_wav structure before enqueueing it for downstream consumers.
     """
-
-    # ------------------------------------------------------------------
-    # CONSTANTS
-    # ------------------------------------------------------------------
-    cn_sample_rate: int = 16000  #: Default sample rate used by all streams (Hz)
 
     # ------------------------------------------------------------------
     # MEMBER VARIABLES
     # ------------------------------------------------------------------
-    _input_stream: sd.InputStream | None = None                 #: Internal sounddevice stream instance
-    c_audio_queue: queue.Queue[Tuple[numpy.ndarray, bool]] = queue.Queue()   #: Queue for raw audio samples
+
+    _input_stream: sd.InputStream | None
+
+    # ------------------------------------------------------------------
+    # INITIALIZATION
+    # ------------------------------------------------------------------
+
+    def __init__(
+        self,
+        i_sample_rate_hz: int = 16000,
+        i_chunk_length_ms: float = 10.0,
+    ) -> None:
+        """
+        Configure the microphone.
+
+        Parameters:
+            i_sample_rate_hz:
+                Audio sampling rate in Hz.
+
+            i_chunk_length_ms:
+                Duration of each captured audio chunk in milliseconds.
+                For example, 10.0 means that the callback receives
+                approximately 10 ms of audio at a time.
+        """
+        if i_sample_rate_hz <= 0:
+            raise ValueError("i_sample_rate_hz must be greater than 0.")
+
+        if i_chunk_length_ms <= 0:
+            raise ValueError("i_chunk_length_ms must be greater than 0.")
+
+        self.cn_sample_rate: int = i_sample_rate_hz
+        self.cn_chunk_length_ms: float = i_chunk_length_ms
+
+        # Calculate number of samples/frames per callback.
+        self.cn_chunk_size: int = max(
+            1,
+            round(
+                self.cn_sample_rate
+                * self.cn_chunk_length_ms
+                / 1000.0
+            ),
+        )
+
+        self._input_stream = None
+        self.c_audio_queue: queue.Queue[St_wav] = queue.Queue()
 
     # ------------------------------------------------------------------
     # PUBLIC METHODS
@@ -29,35 +75,39 @@ class Cl_microphone:
 
     def list_microphones(self) -> List[str]:
         """
-        Enumerate all available input devices on the system.
+        Enumerate all available input devices.
 
         Returns:
-            List[str]: A list containing the human‑readable names of each
-                       microphone device that can be used with sounddevice.
+            List[str]: Human-readable names of input devices.
         """
         devices = sd.query_devices()
+
         input_device_names: List[str] = [
-            device["name"] for device in devices if device["max_input_channels"] > 0
+            device["name"]
+            for device in devices
+            if device["max_input_channels"] > 0
         ]
+
         return input_device_names
 
-    def start_listening(self, i_device_index: int | None = None) -> None:
+    def start_listening(
+        self,
+        i_device_index: int | None = None,
+    ) -> None:
         """
         Open the microphone stream and begin capturing audio data.
 
-        Captured samples are immediately placed on ``c_audio_queue``.  The
-        method will first terminate any previously opened stream to avoid
-        resource leaks.
-
         Parameters:
-            i_device_index (int | None): Index of the desired input device.
-                                         If omitted, the default system microphone
-                                         is used.
+            i_device_index:
+                Index of the desired input device. If None, the
+                default system microphone is used.
 
         Raises:
-            RuntimeError: If a sounddevice stream cannot be started.
+            RuntimeError:
+                If the sounddevice stream cannot be started.
         """
-        # Ensure any previous stream is stopped before starting a new one.
+
+        # Ensure any previous stream is stopped.
         if self._input_stream is not None:
             self.stop_microphone()
 
@@ -68,32 +118,26 @@ class Cl_microphone:
             i_status: sd.CallbackFlags,
         ) -> None:
             """
-            Internal callback fed by sounddevice. It receives raw audio frames
-            and enqueues them for further processing.
-
-            Parameters:
-                i_indata (numpy.ndarray): Raw audio input buffer.
-                i_frames (int): Number of frames in the current chunk.
-                i_time (Any): Timing information (unused).
-                i_status (sd.CallbackFlags): Status flags indicating errors or
-                                             under‑/overflow conditions.
+            Callback invoked by sounddevice for every audio chunk.
             """
+
             if i_status:
-                # Logging is omitted to keep this snippet self‑contained,
-                # but a real implementation should record status details.
+                # Logging could be added here.
                 pass
 
-            # Strip any singleton dimensions and copy the data to avoid
-            # shared memory between threads.
-            l_audio_chunk = numpy.array(i_indata).copy().squeeze()
-            # The bool flag is placeholder; it could be used for VAD results in
-            # future extensions.  For now, we simply mark all frames as "valid".
-            b_valid_frame: bool = True
-            self.c_audio_queue.put((l_audio_chunk, b_valid_frame))
+            np_audio_chunk = (
+                numpy.array(i_indata)
+                .copy()
+                .squeeze()
+                .astype(numpy.float32)
+            )
 
-        # Determine blocksize so that the callback receives at least a few
-        # milliseconds of audio (here ~10 ms).
-        i_blocksize: int = int(self.cn_sample_rate * 0.01)
+            st_chunk = St_wav(
+                np_samples=np_audio_chunk,
+                n_sample_rate_hz=self.cn_sample_rate,
+            )
+
+            self.c_audio_queue.put(st_chunk)
 
         try:
             self._input_stream = sd.InputStream(
@@ -101,18 +145,20 @@ class Cl_microphone:
                 channels=1,
                 device=i_device_index,
                 callback=_audio_callback,
-                blocksize=i_blocksize,
+                blocksize=self.cn_chunk_size,
             )
+
             self._input_stream.start()
-        except sd.PortAudioError as exc:  # pragma: no cover
-            raise RuntimeError(f"Failed to start microphone stream: {exc}") from exc
+
+        except sd.PortAudioError as exc:
+            self._input_stream = None
+            raise RuntimeError(
+                f"Failed to start microphone stream: {exc}"
+            ) from exc
 
     def stop_microphone(self) -> None:
         """
         Terminate the active microphone capture session.
-
-        If a stream is running it will be stopped and closed, ensuring that
-        resources such as audio devices are released cleanly.
         """
         if self._input_stream is not None:
             try:
@@ -121,12 +167,8 @@ class Cl_microphone:
             finally:
                 self._input_stream = None
 
-    def get_audio_queue(self) -> queue.Queue[Tuple[numpy.ndarray, bool]]:
+    def get_audio_queue(self) -> queue.Queue[St_wav]:
         """
-        Retrieve the internal queue that stores captured audio samples.
-
-        Returns:
-            queue.Queue: The thread‑safe queue holding tuples of
-                         (audio_buffer, validity_flag).
+        Retrieve the queue containing captured audio chunks.
         """
         return self.c_audio_queue

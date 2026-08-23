@@ -2,8 +2,9 @@
 Test harness for Cl_microphone
 
 This script demonstrates how to enumerate available microphones,
-open the first one, consume audio samples from the internal queue,
-and gracefully terminate playback when the user presses 'q'.
+open the first one, consume audio chunks (St_wav structures) from the
+internal queue, print their statistics, and gracefully terminate
+playback when the user presses 'q'.
 
 python demo_b_microphone.py
 """
@@ -24,8 +25,9 @@ def main() -> None:
     1. Instantiates Cl_microphone.
     2. Prints a list of all available input devices.
     3. Starts listening on the first device (index 0).
-    4. Consumes audio samples from the queue for a short duration
-       and prints basic statistics.
+    4. Consumes audio chunks from the queue for a short duration
+       and prints their statistics (duration, sample rate, average
+       amplitude and RMS).
     5. Stops the microphone when either the user presses 'q' or the
        demo finishes.
 
@@ -36,7 +38,10 @@ def main() -> None:
         None
     """
     # Instantiate the microphone wrapper.
-    obj_microphone = Cl_microphone()
+    obj_microphone = Cl_microphone(
+        i_sample_rate_hz=24000,
+        i_chunk_length_ms=100,
+    )
 
     # Display all discoverable microphones.
     l_available_device_names: List[str] = obj_microphone.list_microphones()
@@ -50,12 +55,14 @@ def main() -> None:
     obj_microphone.start_listening()
 
     try:
-        # Consume a handful of samples for demonstration purposes.
-        i_max_iterations: int = 100
+        # Consume a handful of chunks for demonstration purposes.
+        i_max_iterations: int = 25
         for _ in range(i_max_iterations):
             if not obj_microphone.c_audio_queue.empty():
-                t_sample, b_validity_flag = obj_microphone.c_audio_queue.get()
-                print(f"Received {t_sample.shape[0]} samples with validity={b_validity_flag}")
+                st_chunk = obj_microphone.c_audio_queue.get()
+                # The St_wav __str__ exposes the duration, sample rate,
+                # sample count, average amplitude and RMS of the chunk.
+                print(f"Chunk: {st_chunk}")
             else:
                 # Sleep briefly to avoid busy‑waiting.
                 time.sleep(0.5)
